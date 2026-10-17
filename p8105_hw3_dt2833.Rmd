@@ -1,0 +1,11 @@
+---
+title: "p8105_hw3_dt2833"
+author: "Dominique Tzou"
+date: "2026-10-17"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
