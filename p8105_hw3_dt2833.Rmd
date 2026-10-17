@@ -5,7 +5,25 @@ date: "2026-10-17"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Problem 1
+```{r import dataset and libraries}
+library(tidyverse)
+library(dplyr)
+library(p8105.datasets)
+data("ny_noaa")
 ```
 
+## Description 
+This dataset contains US temperature, precipitation and snow data collected from 1981 - 2010. There are `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables including `r names(ny_noaa)`, which describe a day's minimum and maximum temperature, inches of precipitation, snow and/or snow depth. However, about 44% of observations are missing data for minimum and maximum temperature. 
+
+```{r }
+new_dates = ny_noaa |>
+separate(date, into = c("year", "month", "day"), sep = "-") 
+view(new_dates)
+view(ny_noaa)
+
+```
+
+Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
+Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
