@@ -251,23 +251,39 @@ nhanes_df |>
   facet_grid(.~education)
 
 #plot 24-hour activity
-
-
-
-```
 nhanes_df_pivot = 
  nhanes_df |>
   pivot_longer(
     min1:min1440,
-    names_to = "min", 
-    names_prefix = "bdi_score_",
-    values_to = "bdi")
+    names_to = "min",
+    values_to = "mims" ) |>
+   separate(min, into = c("mins", "mins_time"), sep = 3) |>
+  select (-mins)|>
+  mutate ( mins_time = as.numeric(mins_time))
 
- ggplot(aes(x = age, y = total_time)) + 
-  geom_point(aes(color = sex),alpha = .5) +
-  geom_smooth(se = FALSE) + 
-  facet_grid(.~education)
+nhanes_df_pivot |>
+  ggplot(aes(x = mins_time, y =mims)) + 
+  geom_point(aes(color = factor(sex)), size = 1, alpha = .5) + # is this needed?
+  geom_smooth(aes(color = sex),se = FALSE) + #is it cumulative? 
+ labs(
+    title = "24-hour activity time courses",
+    x = "Minutes",
+    y = "MIMS",
+    color = "Sex") + 
+  scale_x_continuous(
+    breaks = c(60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140, 1200, 1260, 1320, 1380, 1440), 
+    labels = c("1:00", "2:00", "3:00", "4:00","5:00", "6:00", "7:00", "8:00","9:00","10:00", "11:00", "12:00",
+               "13:00", "14:00", "15:00", "16:00","17:00", "18:00", "19:00", "20:00","21:00","22:00", "23:00", "24:00"))+facet_wrap(~education, ncol = 1)
+
+# for every individual or sum/average of education level
+
+
+```
+
   
 Between males and female, there does not appear to be a distinct trend, They are scattered throughout the plots. Less the highschool has the most distinct sharpest downward trend, where total activity time decreases with age. High school equivalent education level has a trend spoke around age 40, and then total activity decreases with age. Among more than highschool, there is a platued trend around 13000 total activity time until 50, where total activity time decreases with age.
 
 Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+
+
+are we supposed to use geom point for all subjects? Its really hard to see with all the points, and i cant see the trend lines
