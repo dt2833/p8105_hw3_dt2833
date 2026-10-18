@@ -60,7 +60,7 @@ summarize(
   )
          
 
-#looking at precipitation specifically
+#exploring, looking at precipitation specifically
 ny_noaa |> 
   ggplot(aes(x = prcp)) + 
   geom_histogram()
@@ -78,7 +78,7 @@ head()
 
 #what is the most common value for snowfall
 ny_noaa  |>
-  count(snow, name = "n_obs")
+  count(snow, name = "n_obs", sort = TRUE)
 ```
 
 Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
@@ -99,9 +99,9 @@ snow depth: mm (no change)
 temperature min: Celcius
 temperature max: Celcius
 
-There are some unreasonable values, such as highest value of precipitation of 2286mm, and smallest value of snowfall of -13 mm. The tmin min and tmax max is 60 C, which seems unreasonable, inidicating the reporting thermometer was broken, as they were both reported from the same location ID: USR0000NGAN and span of time 08-17-2008 through 09-16-2008. 
+There are some unreasonable values, such as highest value of precipitation of 2286mm, and smallest value of snowfall of -13 mm. The tmin min and tmax max is 60 C, which seems unreasonable, indicating the reporting thermometer was broken, as they were both reported from the same location ID: USR0000NGAN and span of time 08-17-2008 through 09-16-2008. 
 
-The most commonly observed values for snowfall are 0, 3, 5 and 8 
+The most commonly (non missing) observed values for snowfall are 0mm, 25mm, 13mm, and 51mm, and 76mm)
 
 ## Plots
 
@@ -200,8 +200,6 @@ janitor::clean_names() |>
 nhanes_df = 
   left_join(covar_df, accel_df, by = "seqn")
 
-nhanes_df
-
 
 ```
 
@@ -215,7 +213,7 @@ janitor::tabyl(education, sex)
 
 nhanes_df |>
   ggplot(aes(x = education, fill = sex)) + 
-  geom_boxplot(position = "dodge")+
+  geom_bar(position = "dodge")+
   geom_text(stat = "count", aes(label = after_stat(count)),position = position_dodge(width = 0.9), vjust = -0.5) +
   labs(title = "Distribution of Sex Among Edcuation Level of Study Participants", x = "Education Level", y = "Number of Participants")
 
@@ -227,11 +225,11 @@ nhanes_df |>
 ```
 
 
-The boxplot comparisions of age distribution by sex and education level show that among "less than high school" and "more than high school" groups, age distribution between males and females are relatively similar. "Less than highschool" ranges are higher than "More than high school." 
-This is also true for subject counts, as females and males contribute similarly to subject counts, in both "Less than high school" (27 Male , 28 Female) and "More than Highschool" (Male= 56, Fmeale = 59). "More than Highschool" is the education level with the most participants. 
+The boxplot comparisions of age distribution by sex and education level show that among "less than high school" and "more than high school" groups, age distribution between males and females are relatively similar. "Less than highschool" ranges and medians are higher than "More than high school." 
+This is also true for subject counts, as females and males contribute similarly to subject counts, in both "Less than high school" (27 Male , 28 Female) and "More than Highschool" (Male= 56, Fmeale = 59). "More than High school" is the education level with the most participants. 
 
 
-For the "High school equivalent" group, males' interquartile range of age is lower than of females'. In this group, the females' interquartile range of age is the oldest among education levels. Subject count distribution is also nonequivalent by sex, with 35 Males and 23 Females. 
+For the "High school equivalent" group, males' median and interquartile range of age is lower than of females'. In this group, the females' 75th percentile of age is the oldest among education levels. Subject count distribution is also nonequivalent by sex, with 35 Males and 23 Females. 
 
 Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
 
@@ -249,6 +247,15 @@ nhanes_df |>
   geom_point(aes(color = sex),alpha = .5) +
   geom_smooth(se = FALSE) + 
   facet_grid(.~education)
+
+```
+
+  
+Between males and female, there does not appear to be a distinct trend, They are scattered throughout the plots. Less the highschool has the most distinct sharpest downward trend, where total activity time decreases with age. High school equivalent education level has a trend spoke around age 40, and then total activity decreases with age. Among more than highschool, there is a platued trend around 13000 total activity time until 50, where total activity time decreases with age.
+
+Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
+
+```{r}
 
 #plot 24-hour activity
 nhanes_df_pivot = 
@@ -276,14 +283,7 @@ nhanes_df_pivot |>
                "13:00", "14:00", "15:00", "16:00","17:00", "18:00", "19:00", "20:00","21:00","22:00", "23:00", "24:00"))+facet_wrap(~education, ncol = 1)
 
 # for every individual or sum/average of education level
-
-
 ```
-
-  
-Between males and female, there does not appear to be a distinct trend, They are scattered throughout the plots. Less the highschool has the most distinct sharpest downward trend, where total activity time decreases with age. High school equivalent education level has a trend spoke around age 40, and then total activity decreases with age. Among more than highschool, there is a platued trend around 13000 total activity time until 50, where total activity time decreases with age.
-
-Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
 
 
 are we supposed to use geom point for all subjects? Its really hard to see with all the points, and i cant see the trend lines
@@ -318,7 +318,7 @@ citi_df =
 ```
 
 __Description__
-This dataset describes citi bike rides from Jan & July 2020 and Jan & July 2024. With the 4 datasets combined there is a total of `nrows(citi_df)` observations, with `r ncol(citi_df)` variables including ` r names(citi_df)`. 
+This dataset describes citi bike rides from Jan & July 2020 and Jan & July 2024. With the 4 datasets combined there is a total of `r nrow(citi_df)` observations, with `r ncol(citi_df)` variables including `r names(citi_df)`. 
 
 Produce a reader-friendly table showing the total number of rides in each combination of year and month separating casual riders and Citi Bike members. Comment on these results.
 
@@ -347,6 +347,16 @@ citijuly2024_df |>
 
 Make a plot to investigate the effects of day of the week, month, and year on median ride duration. This plot can include one or more panels, but should facilitate comparison across all variables of interest. Comment on your observations from this plot.
 
+
+
+citi_df |>
+  mutate(weekdays= factor(weekdays, levels = week_order))|>
+  group_by(weekdays) |> 
+  mutate(type = "day") |> 
+  rename(time = weekdays) |>
+  summarize(median =median(duration) ) |>
+    ggplot(aes(x = weekdays, y=day_median))+geom_col()
+    
 ```{r}
 
 
@@ -364,13 +374,6 @@ citi_df |>
   mutate(type = "day") |> 
   rename(time = weekdays) 
 
-citi_df |>
-  mutate(weekdays= factor(weekdays, levels = week_order))|>
-  group_by(weekdays) |> 
-  mutate(type = "day") |> 
-  rename(time = weekdays) |>
-  summarize(median =median(duration) ) |>
-    ggplot(aes(x = weekdays, y=day_median))+geom_col()
 
 month_median = 
 citi_df |>
@@ -406,6 +409,7 @@ median_df |>
     x = "Units of Time(frames)",
     y = "Median Ride Duration")
 
+median_barCol_all
 # seperately 
 
 year_median_plot = 
