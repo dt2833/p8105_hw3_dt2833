@@ -9,21 +9,160 @@ output: github_document
 ```{r import dataset and libraries}
 library(tidyverse)
 library(dplyr)
+library(lubridate)
 library(p8105.datasets)
+library(ggplot2)
+library(patchwork)
+library(ggridges)
 data("ny_noaa")
 ```
 
 ## Description 
-This dataset contains US temperature, precipitation and snow data collected from 1981 - 2010. There are `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables including `r names(ny_noaa)`, which describe a day's minimum and maximum temperature, inches of precipitation, snow and/or snow depth. However, about 44% of observations are missing data for minimum and maximum temperature. 
+This dataset contains New York temperature, precipitation and snow data collected from 1981 - 2010. There are `r nrow(ny_noaa)` observations and `r ncol(ny_noaa)` variables including `r names(ny_noaa)`, which describe a day's minimum and maximum temperature, inches of precipitation, snow and/or snow depth. However, about 44% of observations are missing data for minimum and maximum temperature. 
 
-```{r }
-new_dates = ny_noaa |>
-separate(date, into = c("year", "month", "day"), sep = "-") 
-view(new_dates)
-view(ny_noaa)
+```{r data cleaning }
+
+#creating seperate variables for date
+ny_noaa  = ny_noaa |>
+mutate(
+    year  = year(date),
+    month = month(date),
+    day   = day(date),
+    tmax = as.numeric(tmax), 
+    tmin = as.numeric(tmin)
+)
+
+#looking at temperature, precipitation, and snowfall for reasonable units
+
+ny_noaa_summary = 
+  ny_noaa|>
+summarize(
+  across(prcp:tmin, 
+         list(min = min, max = max, mean = mean, median=median),
+         na.rm = TRUE)
+  )
+
+#converting variables into reasonable units
+ny_noaa = 
+  ny_noaa |> 
+  mutate( prcp = prcp/10,
+          tmin = tmin/10, 
+          tmax = tmax/10)
+
+#checking my work 
+ ny_noaa_summary = 
+  ny_noaa|>
+summarize(
+  across(prcp:tmin, 
+         list(min = min, max = max, mean = mean, median=median),
+         na.rm = TRUE)
+  )
+         
+
+#looking at precipitation specifically
+ny_noaa |> 
+  ggplot(aes(x = prcp)) + 
+  geom_histogram(binwidth=500) 
+#the vast majority of days have no precipitation, but there are some high precipitation days 
+
+
+ny_noaa  |> 
+  filter(prcp >= 1000) # there are 653 observations with over 100mm
+
+ny_noaa |> 
+ arrange(desc(prcp)) |>
+head()
+# there is a record on 1982-08-20 of 2286 mm precipitation, and 1983-04-08 of 2032.5 mm precipitation.  This seems unreasonable. 
+
+
+#what is the most common value for snowfall
+ny_noaa  |>
+  count(snow, name = "n_obs")
+```
+
+Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
+
+
+Response:
+Given the summary values of the variables and geography climate of new york, I infer that the variables are initially reported in the following units. 
+prcp: 0.1mm (mean= 29.8, max = 22860)
+snow fall: mm (mean = 4.98, max = 10160)
+snow depth: mm (mean = 37.3, max = 9195)
+temperature min: 0.1 Celcius (median = 33)
+temperature max: 0.1 Celcius (median = 150)
+
+I have adjusted them to be more interpretable and standardized. 
+prcp: mm 
+snow fall: mm (no change)
+snow depth: mm (no change)
+temperature min: Celcius
+temperature max: Celcius
+
+There are some unreasonable values, such as highest value of precipitation of 2286mm, and smallest value of snowfall of -13 mm. The tmin min and tmax max is 60 C, which seems unreasonable, inidicating the reporting thermometer was broken, as they were both reported from the same location ID: USR0000NGAN and span of time 08-17-2008 through 09-16-2008. 
+
+The most commonly observed values for snowfall are 0, 3, 5 and 8 
+
+## Plots
+
+Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
+For July, it is relatively more stable and less variability than in January, where the ranges are wider. 
+For July, the average hovers around 27 C, while in January, it flucuates around 0 C. 
+There are outliers. For January, there was a cold day with a mean_tmax of approx -14C around 1982. For July, there is an outlier around 1988 of a mean_tmax of 14C.   
+
+#Q:what is on the x axis, years???
+
+```{r}
+ny_noaa  |>
+  filter(month %in% c(1, 7)) |>
+  group_by(id, year, month) |>
+  summarize(
+    mean_tmax = mean(tmax)
+  )|>
+  ggplot(aes(x = year, y = mean_tmax,color = month)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(.~month)
+```
+
+
+Two-panel plot (histogram) showing (i) tmax vs tmin for the full dataset
+```{r}
+tmax_histo =
+ny_noaa  |>
+  ggplot(aes(x =tmax)) + 
+  geom_histogram()
+
+tmin_histo =
+ny_noaa  |>
+  ggplot(aes(x =tmin)) + 
+  geom_histogram()
+
+(tmax_histo+tmin_histo) #two panel-plot
 
 ```
 
-Do some data cleaning. Create separate variables for year, month, and day. Ensure observations for temperature, precipitation, and snowfall are given in reasonable units. For snowfall, what are the most commonly observed values? Why?
-Make a two-panel plot showing the average max temperature in January and in July in each station across years. Is there any observable / interpretable structure? Any outliers?
-Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+(ii) a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+```{r}
+
+
+ny_noaa  |>
+  mutate(year = as.character(year)) |>
+  filter( 0 <snow & 100> snow ) |>
+  ggplot(aes(x = snow)) + 
+     geom_density(aes(fill = year), alpha = .5) +
+facet_wrap(~year) 
+
+ny_noaa  |>
+  mutate(year = as.character(year)) |>
+  filter( 0 <snow & 100> snow ) |>
+  ggplot(aes(x = snow)) + 
+     geom_boxplot()  + 
+facet_wrap(~year) 
+
+#not working 
+ny_noaa  |>
+  filter( 0 <snow & 100> snow ) |>
+  ggplot(aes(x=year, y = snow)) + 
+     geom_point(aes(size = .0001),alpha = .5)
+
+```
