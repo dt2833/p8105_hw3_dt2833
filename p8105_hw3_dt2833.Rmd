@@ -24,6 +24,7 @@ This dataset contains New York temperature, precipitation and snow data collecte
 
 #creating seperate variables for date
 ny_noaa  = ny_noaa |>
+janitor::clean_names() |>
 mutate(
     year  = year(date),
     month = month(date),
@@ -62,7 +63,7 @@ summarize(
 #looking at precipitation specifically
 ny_noaa |> 
   ggplot(aes(x = prcp)) + 
-  geom_histogram(binwidth=500) 
+  geom_histogram()
 #the vast majority of days have no precipitation, but there are some high precipitation days 
 
 
@@ -166,3 +167,107 @@ ny_noaa  |>
      geom_point(aes(size = .0001),alpha = .5)
 
 ```
+
+# Problem 2
+Load, tidy, merge, and otherwise organize the data sets. Your final dataset should include all originally observed variables; exclude participants less than 21 years of age, and those with missing demographic data; and encode data with reasonable variable classes (i.e. not numeric, and using factors with the ordering of tables and plots in mind).
+
+
+```{r creating datasets}
+
+#importing
+accel_df = read_csv(file = "./data/nhanes_accel.csv", 
+                      na = c("NA", ".", ""))|>
+          janitor::clean_names() 
+
+covar_df = read_csv(file = "./data/nhanes_covar.csv" , na = c("NA", ".", ""), skip =4)|>
+janitor::clean_names() |>
+  drop_na()|>
+  filter(age >=21) |>
+  mutate( #encoding sex and education as factor variable as they are categories
+    sex = as.factor(sex), 
+    sex = recode(sex, 
+                         `1` = "Male", 
+                         `2` = "Female"),
+    education = as.factor(education),
+    education = recode(education, 
+                         `1` = "Less than high school", 
+                         `2` = "High school equivalent",
+                        `3` = "More than high school")
+  )
+
+#merging 
+
+nhanes_df = 
+  left_join(covar_df, accel_df, by = "seqn")
+
+nhanes_df
+
+
+```
+
+
+Produce a reader-friendly table for the number of men and women in each education category, and create a visualization of the age distributions for men and women in each education category. Comment on these items.
+
+```{r}
+nhanes_df |> 
+  group_by(education, sex) |> 
+janitor::tabyl(education, sex)
+
+nhanes_df |>
+  ggplot(aes(x = education, fill = sex)) + 
+  geom_boxplot(position = "dodge")+
+  geom_text(stat = "count", aes(label = after_stat(count)),position = position_dodge(width = 0.9), vjust = -0.5) +
+  labs(title = "Distribution of Sex Among Edcuation Level of Study Participants", x = "Education Level", y = "Number of Participants")
+
+nhanes_df |> 
+  ggplot(aes(x = sex, y = age, fill = sex))+ 
+  geom_boxplot() +
+  facet_wrap(~education) 
+
+```
+
+
+The boxplot comparisions of age distribution by sex and education level show that among "less than high school" and "more than high school" groups, age distribution between males and females are relatively similar. "Less than highschool" ranges are higher than "More than high school." 
+This is also true for subject counts, as females and males contribute similarly to subject counts, in both "Less than high school" (27 Male , 28 Female) and "More than Highschool" (Male= 56, Fmeale = 59). "More than Highschool" is the education level with the most participants. 
+
+
+For the "High school equivalent" group, males' interquartile range of age is lower than of females'. In this group, the females' interquartile range of age is the oldest among education levels. Subject count distribution is also nonequivalent by sex, with 35 Males and 23 Females. 
+
+Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate across minutes to create a total activity variable for each participant. Plot these total activities (y-axis) against age (x-axis); your plot should compare men to women and have separate panels for each education level. Include a trend line or a smooth to illustrate differences. Comment on your plot.
+
+```{r}
+# creating variable for total activity variable for each participant
+nhanes_df =
+  nhanes_df |> 
+  mutate( 
+    total_time = rowSums(across(min1:min1440),na.rm = TRUE) 
+    )
+
+# plot total time
+nhanes_df |>
+ ggplot(aes(x = age, y = total_time)) + 
+  geom_point(aes(color = sex),alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(.~education)
+
+#plot 24-hour activity
+
+
+
+```
+nhanes_df_pivot = 
+ nhanes_df |>
+  pivot_longer(
+    min1:min1440,
+    names_to = "min", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi")
+
+ ggplot(aes(x = age, y = total_time)) + 
+  geom_point(aes(color = sex),alpha = .5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(.~education)
+  
+Between males and female, there does not appear to be a distinct trend, They are scattered throughout the plots. Less the highschool has the most distinct sharpest downward trend, where total activity time decreases with age. High school equivalent education level has a trend spoke around age 40, and then total activity decreases with age. Among more than highschool, there is a platued trend around 13000 total activity time until 50, where total activity time decreases with age.
+
+Accelerometer data allows the inspection activity over the course of the day. Make a three-panel plot that shows the 24-hour activity time courses for each education level and use color to indicate sex. Describe in words any patterns or conclusions you can make based on this graph; including smooth trends may help identify differences.
