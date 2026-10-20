@@ -84,7 +84,12 @@ noaa_median
 noaa_min
 noaa_max
 
-#exploring, looking at precipitation specifically
+
+```
+
+
+Exploring data, looking at precipitation specifically
+```{r}
 ny_noaa |> 
   ggplot(aes(x = prcp)) + 
   geom_histogram()
@@ -105,19 +110,34 @@ ny_noaa  |>
   count(snow, name = "n_obs", sort = TRUE)
 ```
 
+__Observations and Adjustments__
 Given the summary values of the variables and geography climate of new york, I infer that the variables are initially reported in the following units. 
+
 prcp: 0.1mm (mean= 29.8, max = 22860)
+
 snow fall: mm (mean = 4.98, max = 10160)
+
 snow depth: mm (mean = 37.3, max = 9195)
+
 temperature min: 0.1 Celcius (median = 33)
+
 temperature max: 0.1 Celcius (median = 150)
 
+
+
 I have adjusted them to be more interpretable and standardized. 
+
 prcp: mm 
+
 snow fall: mm (no change)
+
 snow depth: mm (no change)
+
 temperature min: Celcius
+
 temperature max: Celcius
+
+
 
 There are some unreasonable values, such as highest value of precipitation of 2286mm, and smallest value of snowfall of -13 mm. The tmin min and tmax max is 60 C, which seems unreasonable, indicating the reporting thermometer was broken, as they were both reported from the same location ID: USR0000NGAN and span of time 08-17-2008 through 09-16-2008. 
 
@@ -215,7 +235,7 @@ nhanes_df |>
   group_by(education, sex) |> 
 janitor::tabyl(education, sex) |>
   knitr::kable(
-    col.names = c("Education", "Male", "Female")
+    col.names = c("Education Level", "Male", "Female")
   )
 
 #bar graph
@@ -261,7 +281,7 @@ nhanes_df |>
 ```
 
   
-Between males and female, the largest difference is among high school equivalent education level, where females have higher total activity at younger ages. High school equivalent education level has a total activity peak around age 40, and then total activity decreases with age. 
+Between males and female, the largest difference is among high school equivalent education level, where females have higher total activity at younger ages, compared to males. High school equivalent education level has a total activity peak around age 40, and then total activity decreases with age. 
 
 Less than high school has the most distinct sharpest downward trend, where total activity time decreases with age and sex is similar. There is spike in total activity at 60. 
 
@@ -288,7 +308,7 @@ nhanes_df_pivot =
 
 nhanes_df_pivot |>
   ggplot(aes(x = mins_time, y =mims)) + 
-  geom_point(aes(color = factor(sex)), size = 1, alpha = .05) + # is this needed?
+  geom_point(aes(color = factor(sex)), size = 1, alpha = .05) + 
   geom_smooth(aes(color = sex),se = FALSE) + 
  labs(
     title = "24-hour activity time courses",
@@ -303,8 +323,9 @@ nhanes_df_pivot |>
   facet_wrap(~education, ncol = 1)
 
 ```
+
 Overall the activity trends are similar between sex and between education level. 
-Activity is low between 1am - 5am( sleeping), and it consistent until it starts decreasing 9pm. 
+Activity is low between 1am - 5am( sleeping), and it consistent around 12 MIMS until it starts decreasing 9pm. 
 Among more than high school , we see more outliers compared to other education levels. There are higher amounts of MIMs among females around 8-9:00am, while higher amounts of MIMs around 8-10pm, before and after a typical work day. Among more than high school, females' MIMs tend to trend higher than males'. 
 Among the other educational levels, there is not a distinguishable trend between sex. 
 
@@ -365,7 +386,7 @@ Between months, July had more rides than January, in every comparision, when mat
 Between years, 2024 had more rides than 2020, when matched for month and membership. 
 
 
-The 5 most popular starting stations for July 2024; include the number of rides originating from these stations.
+The 5 most popular starting stations for July 2024; including the number of rides originating from these stations.
 
 ```{r}
 
@@ -378,8 +399,8 @@ citijuly2024_df |>
 
 ```
 
-Make a plot to investigate the effects of day of the week, month, and year on median ride duration. This plot can include one or more panels, but should facilitate comparison across all variables of interest. Comment on your observations from this plot.
 
+__Median Ride Duration Across Years, Months and Weekdays__
     
 ```{r}
 
@@ -402,9 +423,7 @@ citi_df |>
 Comparing months between years, 2020 had longer median ride duration than 2024 and a bigger difference between January and July. Overall, median ride duration increased over the week, peaking on saturday. 
 
 
-For data in 2024, make a figure that shows the impact of month, membership status, and bike type on the distribution of ride duration. Comment on your results.
-
-Impact of month, membership status, and bike type on the distribution of ride duration
+__Impact of month, membership status, and bike type on the distribution of ride duration__
 ```{r citi2024}
 citi_2024_df = 
 citi_df |> 
@@ -415,13 +434,13 @@ citi_2024_df |>
   ggplot(aes(x =month, y = duration, fill = month)) + 
     geom_boxplot()+
   labs(
-    title = "Impact of month, membership status, and bike type on the distribution of ride duration",y = "Ride Duration in Minutes")+facet_grid(member_casual~rideable_type)
+    title = "month, membership status, and bike type on ride duration distribution",y = "Ride Duration in Minutes")+facet_grid(member_casual~rideable_type)
 
 
 
 ```
 
-Between months of January and July, ride duration is relatively similar, when compared among bike type and membership status. The largest IQR of ride durations is among casual riders using classic bikes. For member rides, the 75% of rides are short, less than 20 minutes, thus, casual riders had longer ride durations overall.For members, classic bike and electric bike durations are similar, across January and July too. 
+Between months of January and July, ride duration is relatively similar, when compared among bike type and membership status. The largest IQR of ride durations is among casual riders using classic bikes. For member rides, the 75% of rides are short, less than ~20 minutes, thus, casual riders had longer ride durations overall(75% under ~25 minutes).For members, classic bike and electric bike durations are similar, across January and July too. There is a large spread of ride duration outliers among casual electric bike rides in July. 
 
 
 
