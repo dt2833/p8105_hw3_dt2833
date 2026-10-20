@@ -229,7 +229,7 @@ nhanes_df =
 
 ### Distribution of Sex Among Education Level of Study Participants
 
-```{r}
+```{r Distribution of Sex Among Education Level of Study Participants}
 #table
 nhanes_df |> 
   group_by(education, sex) |> 
@@ -259,7 +259,7 @@ This is also true for subject counts, as females and males contribute similarly,
 For the "High school equivalent" group, males' median and interquartile range of age is lower than of females'. In this group, the females' 75th percentile of age is the oldest among education levels. Subject count distribution is also nonequivalent by sex, with 35 Males and 23 Females. 
 
 ### Total Activity by Age and Education
-```{r}
+```{r Total Activity by Age and Education}
 # creating variable for total activity variable for each participant
 nhanes_df =
   nhanes_df |> 
@@ -402,7 +402,7 @@ citijuly2024_df |>
 
 __Median Ride Duration Across Years, Months and Weekdays__
     
-```{r}
+```{r Median Ride Duration Across Years, Months and Weekdays}
 
 week_order = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
